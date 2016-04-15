@@ -95,6 +95,9 @@ void Node::Initialize(int id, int cost_id, Properties* props) {
   SET_CLASS(NC_CONSTANT, ts, "Const", "HostConst");
   SET_CLASS(NC_VARIABLE, ts, "Variable", "");
   SET_CLASS(NC_IDENTITY, ts, "Identity", "RefIdentity");
+  SET_CLASS(NC_GET_SESSION_HANDLE, ts, "GetSessionHandle", "");
+  SET_CLASS(NC_GET_SESSION_TENSOR, ts, "GetSessionTensor", "");
+  SET_CLASS(NC_DELETE_SESSION_TENSOR, ts, "DeleteSessionTensor", "");
   if (class_ == NC_UNINITIALIZED) {
     class_ = NC_OTHER;  // Catch all
   }
@@ -307,7 +310,13 @@ void Graph::ToGraphDef(GraphDef* graph_def) const {
       if (edge->IsControlEdge()) {
         inputs.push_back(edge);
       } else {
-        DCHECK(inputs[edge->dst_input()] == nullptr);
+        CHECK(inputs[edge->dst_input()] == nullptr)
+            << "Edge " << edge->src()->DebugString() << ":"
+            << edge->dst()->DebugString() << " with dst_input "
+            << edge->dst_input() << " and had pre-existing input edge "
+            << inputs[edge->dst_input()]->src()->DebugString() << ":"
+            << inputs[edge->dst_input()]->dst()->DebugString();
+
         inputs[edge->dst_input()] = edge;
       }
     }

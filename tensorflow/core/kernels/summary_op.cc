@@ -52,7 +52,7 @@ class SummaryScalarOp : public OpKernel {
     for (int i = 0; i < Ttags.size(); i++) {
       Summary::Value* v = s.add_value();
       v->set_tag(Ttags(i));
-      v->set_simple_value(Tvalues(i));
+      v->set_simple_value(T(Tvalues(i)));
     }
 
     Tensor* summary_tensor = nullptr;
@@ -89,10 +89,10 @@ class SummaryHistoOp : public OpKernel {
       T v = flat(i);
       if (!std::isfinite(v)) {
         c->SetStatus(
-            errors::OutOfRange("Nan in summary histogram for: ", name()));
+            errors::InvalidArgument("Nan in summary histogram for: ", name()));
         break;
       }
-      histo.Add(v);
+      histo.Add(static_cast<double>(v));
     }
 
     Summary s;

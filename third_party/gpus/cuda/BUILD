@@ -10,14 +10,14 @@ package(default_visibility = ["//visibility:public"])
 
 config_setting(
     name = "cuda_crosstool_condition",
-    values = {"crosstool_top": "//third_party/gpus/crosstool"},
+    values = {"define": "using_cuda=true"},
     visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "using_gcudacc",
     values = {
-        "crosstool_top": "//third_party/gpus/crosstool",
+        "define": "using_cuda=true",
         "copt": "--use_gcudacc",
     },
     visibility = ["//visibility:public"],
@@ -26,7 +26,7 @@ config_setting(
 config_setting(
     name = "using_nvcc",
     values = {
-        "crosstool_top": "//third_party/gpus/crosstool",
+        "define": "using_cuda=true",
         "copt": "--use_nvcc",
     },
 )
@@ -141,7 +141,7 @@ genrule(
     ],
     cmd = if_cuda(
         # Under cuda config, create all the symbolic links to the actual cuda files
-        "OUTPUTDIR=`readlink -f $(@D)/../../..`; cd third_party/gpus/cuda; OUTPUTDIR=$$OUTPUTDIR ./cuda_config.sh --check;",
+        "OUTPUTDIR=`readlink -f $(@D)/../../..`; cd `dirname $(location :cuda_config.sh)`; OUTPUTDIR=$$OUTPUTDIR ./cuda_config.sh --check;",
 
         # Under non-cuda config, create all dummy files to make the build go through
         ";".join([
@@ -167,7 +167,7 @@ genrule(
     ],
     cmd = if_cuda(
         # Under cuda config, create the symbolic link to the actual cuda.config
-        "ln -sf `readlink -f third_party/gpus/cuda/cuda.config` $(@D)/;",
+        "configfile=$(location :cuda.config); ln -sf `readlink -f $${configfile#*/*/*/}` $(@D)/;",
 
         # Under non-cuda config, create the dummy file
         ";".join([
